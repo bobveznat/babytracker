@@ -125,6 +125,29 @@
                 thread_updateStatus();
             });
 
+            function drawHistory() {
+                activities = getActivities()
+                container = $('#history_content');
+                container.html('');
+                num_activities = Math.min(activities.length, 50);
+
+                last_end = new Date();
+                for(var i = activities.length - 1; i > activities.length - num_activities; i--) {
+
+                    start_time = new Date(activities[i]['start_time']);
+                    container.append(
+                        past_tense_map[activities[i]['type']] +
+                        ' from ' + start_time.toLocaleTimeString() +
+                        ' to ' + last_end.toLocaleTimeString() + '<br>');
+                    last_end = start_time;
+                }
+
+            }
+
+            $('#history').live('pageshow', function(event) {
+                drawHistory();
+            });
+
 
         </script>
     </head>
@@ -163,6 +186,7 @@
                 <h1>What did Nicholas do?</h1>
             </div>
             <div data-role="content">
+                <div id="history_content"></div>
             </div>
             <div data-role="footer" data-position="fixed" data-id="footer-nav">
                 <div data-role="navbar">
