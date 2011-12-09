@@ -5,32 +5,53 @@
         <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.css" />
         <script type="text/javascript" src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
         <script type="text/javascript" src="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.js"></script>
+        <script type="text/javascript" src="sprintf-0.6.js"></script>
 
         <script type="text/javascript">
 
+            var present_tense_map = {
+                'eat': 'eating',
+                'sleep': 'sleeping',
+                'awake': 'awake',
+            };
+            var past_tense_map = {
+                'eat': 'ate',
+                'sleep': 'slept',
+                'awake': 'awoke',
+            };
+
+
             function initStorage() {
-                if(localStorage.getItem('activities')) {
-                    return;
+                if(localStorage.getItem('activities') === null) {
+                    localStorage.setItem('activities', JSON.stringify([]));
+                    newActivity('awake');
                 }
-                localStorage.setItem('activities', JSON.stringify([]));
-                newActivity('awake');
+            }
+
+            function getActivities() {
+                return JSON.parse(localStorage.getItem('activities'));
             }
 
             function newActivity(type) {
-                var activities = JSON.parse(localStorage.getItem('activities'));
+                var last_activity = getLatestActivity();
+                if(last_activity['type'] == type) {
+                    return;
+                }
+
+                var activities = getActivities();
                 var d = new Date();
                 activities.push({'type': type, 'start_time': d.getTime()});
                 localStorage.setItem('activities', JSON.stringify(activities));
             }
 
             function getLatestActivity() {
-                var activities = JSON.parse(localStorage.getItem('activities'));
+                var activities = getActivities();
                 // XXX Raise an error if activities isn't set yet?
-                return activities[activities.length - 1]['type'];
+                return activities[activities.length - 1];
             }
 
             function loadLocalActivity() {
-                var current_activity = getLatestActivity();
+                var current_activity = getLatestActivity()['type'];
                 if(current_activity) {
                     $('#activity_type_' + current_activity).attr('checked', true).checkboxradio('refresh');
                 } else {
@@ -43,17 +64,72 @@
                 newActivity(new_activity);
             }
 
-            $("#activity").live('pageinit', function(event) {
+            function date_diff(d1, d2) {
+                var delta_ms = d2 - d1;
+                var delta_total_sec = delta_ms / 1000;
+
+                var delta_hours = parseInt(delta_total_sec / 3600);
+                var delta_remaining_seconds = delta_total_sec % 3600;
+
+                var delta_min = parseInt(delta_remaining_seconds / 60);
+                var delta_sec = delta_remaining_seconds % 60;
+
+                var date_string = sprintf('%02d:%02d:%02d', delta_hours, delta_min, delta_sec);
+                return date_string;
+
+            }
+
+            function lastNap() {
+                return lastActivity('sleep');
+            }
+            function lastFeeding() {
+                return lastActivity('eat');
+            }
+            function lastAwake() {
+                return lastActivity('awake');
+            }
+
+            function lastActivity(activity_type) {
+                var activities = getActivities();
+                var now = new Date();
+                var state_ends = now.getTime();
+
+                for(var i=activities.length-1; i>=0; i--) {
+                    if(activities[i]['type'] == activity_type) {
+                        var nap_started = new Date(activities[i]['start_time']);
+                        return 'last ' + past_tense_map[activity_type] +
+                                ' at ' + nap_started.toLocaleTimeString() +
+                                ' for ' + date_diff(activities[i]['start_time'], state_ends);
+                    } else {
+                        state_ends = activities[i]['start_time'];
+                    }
+                }
+            }
+
+            function thread_updateStatus() {
+                var current_activity = getLatestActivity();
+                var now = new Date();
+                date_string = date_diff(current_activity['start_time'], now.getTime());
+
+                var current_status = 'Nicholas has been ' + present_tense_map[current_activity['type']] + ' for ' + date_string;
+
+                $('#status').html(current_status + '<br>' + lastNap() + '<br>' + lastFeeding() + '<br>');
+
+                window.setTimeout(thread_updateStatus, 1000);
+            }
+
+            $("#current").live('pageinit', function(event) {
                 initStorage();
                 loadLocalActivity();
                 $('input:radio[name=activity_type]').change(activityChange);
+                thread_updateStatus();
             });
 
 
         </script>
     </head>
     <body>
-        <div data-role="page" id="activity">
+        <div data-role="page" id="current">
             <div data-role="header">
                 <h1>What's Nicholas Doing?</h1>
             </div>
@@ -69,7 +145,35 @@
                     <label for="activity_type_eat">Eating</label>
                 </fieldset>
 
+                <div id="status"></div>
+
+            </div>
+            <div data-role="footer" data-position="fixed" data-id="footer-nav">
+                <div data-role="navbar">
+                    <ul>
+                        <li><a href="#current" data-theme="b">Current</a></li>
+                        <li><a href="#history">History</a></li>
+                    </ul>
+                </div>
             </div>
         </div>
+
+        <div data-role="page" id="history">
+            <div data-role="header">
+                <h1>What did Nicholas do?</h1>
+            </div>
+            <div data-role="content">
+            </div>
+            <div data-role="footer" data-position="fixed" data-id="footer-nav">
+                <div data-role="navbar">
+                    <ul>
+                        <li><a href="#current">Current</a></li>
+                        <li><a href="#history" data-theme="b">History</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+
     </body>
 </html>
