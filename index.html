@@ -1,0 +1,59 @@
+<html>
+    <head>
+        <title>What's Nicholas Doing?</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" /> 
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.css" />
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+        <script type="text/javascript" src="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.js"></script>
+
+        <script type="text/javascript">
+            function unsetAllActivity() {
+                $('input:radio[name=activity_type]').each(function(index,element) {
+                        console.log(element);
+                    element.checked = false;
+                });
+            }
+
+            function loadLocalActivity() {
+                var current_activity = localStorage.getItem('activity');
+                if(current_activity) {
+                    $('#activity_type_' + current_activity).attr('checked', true).checkboxradio('refresh');
+                } else {
+                    console.log('No activity set.');
+                }
+            }
+
+            function activityChange(event) {
+                var new_activity = $('input:radio[name=activity_type]:checked').val();
+                localStorage.setItem('activity', new_activity)
+            }
+
+            $("#activity").live('pageinit', function(event) {
+                loadLocalActivity();
+                $('input:radio[name=activity_type]').change(activityChange);
+            });
+
+
+        </script>
+    </head>
+    <body>
+        <div data-role="page" id="activity">
+            <div data-role="header">
+                <h1>What's Nicholas Doing?</h1>
+            </div>
+
+            <div data-role="content">
+
+                <fieldset id="activity_fieldset" data-role="controlgroup"  data-type="horizontal">
+                    <input type="radio" name="activity_type" id="activity_type_awake" value="awake">
+                    <label for="activity_type_awake">Awake</label>
+                    <input type="radio" name="activity_type" id="activity_type_sleep" value="sleep">
+                    <label for="activity_type_sleep">Sleeping</label>
+                    <input type="radio" name="activity_type" id="activity_type_eat" value="eat">
+                    <label for="activity_type_eat">Eating</label>
+                </fieldset>
+
+            </div>
+        </div>
+    </body>
+</html>
