@@ -115,7 +115,7 @@
 
                 $('#status').html(current_status + '<br>' + lastNap() + '<br>' + lastFeeding() + '<br>');
 
-                window.setTimeout(thread_updateStatus, 1000);
+                window.setTimeout(thread_updateStatus, 5000);
             }
 
             $("#current").live('pageinit', function(event) {
@@ -163,9 +163,9 @@
                     <input type="radio" name="activity_type" id="activity_type_awake" value="awake">
                     <label for="activity_type_awake">Awake</label>
                     <input type="radio" name="activity_type" id="activity_type_sleep" value="sleep">
-                    <label for="activity_type_sleep">Sleeping</label>
+                    <label for="activity_type_sleep">Sleep</label>
                     <input type="radio" name="activity_type" id="activity_type_eat" value="eat">
-                    <label for="activity_type_eat">Eating</label>
+                    <label for="activity_type_eat">Eat</label>
                 </fieldset>
 
                 <div id="status"></div>
