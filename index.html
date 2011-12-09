@@ -34,7 +34,7 @@
 
             function newActivity(type) {
                 var last_activity = getLatestActivity();
-                if(last_activity['type'] == type) {
+                if(last_activity && last_activity['type'] == type) {
                     return;
                 }
 
