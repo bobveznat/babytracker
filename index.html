@@ -1,21 +1,36 @@
 <html>
     <head>
         <title>What's Nicholas Doing?</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.css" />
         <script type="text/javascript" src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
         <script type="text/javascript" src="http://code.jquery.com/mobile/1.0/jquery.mobile-1.0.min.js"></script>
 
         <script type="text/javascript">
-            function unsetAllActivity() {
-                $('input:radio[name=activity_type]').each(function(index,element) {
-                        console.log(element);
-                    element.checked = false;
-                });
+
+            function initStorage() {
+                if(localStorage.getItem('activities')) {
+                    return;
+                }
+                localStorage.setItem('activities', JSON.stringify([]));
+                newActivity('awake');
+            }
+
+            function newActivity(type) {
+                var activities = JSON.parse(localStorage.getItem('activities'));
+                var d = new Date();
+                activities.push({'type': type, 'start_time': d.getTime()});
+                localStorage.setItem('activities', JSON.stringify(activities));
+            }
+
+            function getLatestActivity() {
+                var activities = JSON.parse(localStorage.getItem('activities'));
+                // XXX Raise an error if activities isn't set yet?
+                return activities[activities.length - 1]['type'];
             }
 
             function loadLocalActivity() {
-                var current_activity = localStorage.getItem('activity');
+                var current_activity = getLatestActivity();
                 if(current_activity) {
                     $('#activity_type_' + current_activity).attr('checked', true).checkboxradio('refresh');
                 } else {
@@ -25,10 +40,11 @@
 
             function activityChange(event) {
                 var new_activity = $('input:radio[name=activity_type]:checked').val();
-                localStorage.setItem('activity', new_activity)
+                newActivity(new_activity);
             }
 
             $("#activity").live('pageinit', function(event) {
+                initStorage();
                 loadLocalActivity();
                 $('input:radio[name=activity_type]').change(activityChange);
             });
